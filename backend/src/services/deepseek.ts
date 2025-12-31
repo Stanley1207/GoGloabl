@@ -349,7 +349,7 @@ export async function analyzeMarket(
       throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
     }
 
-    const data: DeepSeekResponse = await response.json();
+  const data = await response.json() as DeepSeekResponse;
     const content = data.choices[0]?.message?.content;
 
     if (!content) {
