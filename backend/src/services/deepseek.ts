@@ -1,12 +1,33 @@
 import type { ProductData, MarketAnalysis, DeepSeekRequest, DeepSeekResponse } from '../types.js';
 
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
+// 🔥 修复：不要在模块顶层立即读取环境变量！
+// 而是在函数被调用时才读取，这样确保 dotenv.config() 已经执行
 
-
-if (!DEEPSEEK_API_KEY) {
-  console.error('❌ DEEPSEEK_API_KEY not found in environment');
-  console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('DEEP')));
+/**
+ * 获取 DeepSeek API 配置（延迟读取）
+ */
+function getApiConfig() {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiUrl = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
+  
+  if (!apiKey) {
+    console.error('\n❌ DEEPSEEK_API_KEY not found in environment');
+    console.error('📋 Current environment variables containing "DEEP":');
+    const deepVars = Object.keys(process.env).filter(k => k.includes('DEEP'));
+    if (deepVars.length > 0) {
+      deepVars.forEach(k => console.error(`   ${k}: ${process.env[k]?.substring(0, 10)}...`));
+    } else {
+      console.error('   (none found)');
+    }
+    console.error('\n💡 This usually means:');
+    console.error('   1. .env file is missing or in wrong location');
+    console.error('   2. .env file doesn\'t have DEEPSEEK_API_KEY');
+    console.error('   3. Server needs to be restarted\n');
+    
+    throw new Error('DEEPSEEK_API_KEY is not configured');
+  }
+  
+  return { apiKey, apiUrl };
 }
 
 /**
@@ -292,9 +313,8 @@ export async function analyzeMarket(
   productData: ProductData,
   market: string
 ): Promise<MarketAnalysis> {
-  if (!DEEPSEEK_API_KEY) {
-    throw new Error('DEEPSEEK_API_KEY is not configured');
-  }
+  // 🔥 在函数内部读取配置，而不是在模块顶层
+  const { apiKey, apiUrl } = getApiConfig();
 
   const prompt = buildPrompt(productData, market);
 
@@ -312,17 +332,20 @@ export async function analyzeMarket(
   };
 
   try {
-    const response = await fetch(DEEPSEEK_API_URL, {
+    console.log(`[DeepSeek] Analyzing ${market}...`);
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+        'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[DeepSeek] API error for ${market}:`, response.status, errorText);
       throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
     }
 
@@ -341,10 +364,11 @@ export async function analyzeMarket(
       throw new Error('Invalid response structure from DeepSeek');
     }
 
+    console.log(`[DeepSeek] ✓ Successfully analyzed ${market} (score: ${analysis.overallScore})`);
     return analysis;
 
   } catch (error) {
-    console.error(`Error analyzing market ${market}:`, error);
+    console.error(`[DeepSeek] Error analyzing market ${market}:`, error);
     
     // Return a fallback error response
     return {
@@ -396,7 +420,7 @@ export async function analyzeMarket(
         culturalConsiderations: [],
         marketingRecommendations: []
       },
-      keyFindings: ['Analysis failed. Please try again later.'],
+      keyFindings: [`Analysis failed for ${market}. Please try again later.`],
       actionItems: ['Contact support if the issue persists.'],
       riskAlerts: ['Unable to complete market analysis due to technical error.'],
       sources: [],
@@ -411,14 +435,18 @@ export async function analyzeMarket(
 export async function analyzeProduct(productData: ProductData): Promise<Record<string, MarketAnalysis>> {
   const results: Record<string, MarketAnalysis> = {};
 
+  console.log(`[DeepSeek] Starting analysis for ${productData.targetMarkets.length} markets`);
+
   // Analyze each target market sequentially to avoid rate limits
   for (const market of productData.targetMarkets) {
-    console.log(`Analyzing market: ${market}`);
     results[market] = await analyzeMarket(productData, market);
     
     // Add a small delay between requests to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (productData.targetMarkets.indexOf(market) < productData.targetMarkets.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
   }
 
+  console.log(`[DeepSeek] ✓ Completed analysis for all markets`);
   return results;
 }

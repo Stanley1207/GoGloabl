@@ -17,6 +17,8 @@ if (!process.env.DEEPSEEK_API_KEY) {
   console.error('Please create a .env file with your DeepSeek API key');
   console.error(`Looking for .env at: ${join(__dirname, '../.env')}`);
   process.exit(1);
+}else{
+    console.log('🚀 FOUND deepseek api');
 }
 
 const app = express();
