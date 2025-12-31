@@ -1,22 +1,15 @@
 # ==========================================
-# BACKEND .gitignore
-# For Node.js + Express + TypeScript API
+# ROOT .gitignore
+# For GOGLOBAL project (frontend + backend)
 # ==========================================
 
-# Environment Variables (CRITICAL - NEVER COMMIT)
+# Environment Variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 .env*.local
-
-# API Keys and Secrets (extra safety layer)
-**/secrets.*
-**/*.key
-**/*.pem
-**/api-keys.json
-**/*-credentials.json
 
 # Dependencies
 node_modules/
@@ -25,6 +18,7 @@ node_modules/
 
 # Build Output
 dist/
+dist-ssr/
 build/
 out/
 
@@ -37,14 +31,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# TypeScript
-*.tsbuildinfo
-tsconfig.tsbuildinfo
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea/
+.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -53,7 +44,6 @@ tsconfig.tsbuildinfo
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Testing
 coverage/
@@ -64,8 +54,6 @@ coverage/
 .cache/
 *.tmp
 *.temp
-tmp/
-temp/
 
 # OS files
 Thumbs.db
@@ -74,29 +62,18 @@ Desktop.ini
 .LSOverride
 ._*
 
-# Database files (if using local DB)
-*.sqlite
-*.sqlite3
-*.db
-
-# Uploads directory (if storing user uploads)
-uploads/
-public/uploads/
-
-# PM2 process manager
-.pm2/
-pm2.config.js
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Serverless directories
-.serverless/
-
-# Package manager lock files (optional)
+# Package manager lock files (optional - uncomment if you want to ignore)
 # package-lock.json
 # yarn.lock
 # pnpm-lock.yaml
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Production
+/backend/dist/
+/frontend/dist/
+
+# Local development
+.local/
