@@ -3,63 +3,87 @@ import type { ProductData, MarketAnalysis, DeepSeekRequest, DeepSeekResponse } f
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions';
 
+
+if (!DEEPSEEK_API_KEY) {
+  console.error('❌ DEEPSEEK_API_KEY not found in environment');
+  console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('DEEP')));
+}
+
 /**
  * Build the analysis prompt for a specific market
  */
 function buildPrompt(productData: ProductData, market: string): string {
-  return `You are a professional international market expansion analyst. Please provide a detailed market entry feasibility analysis report based on the following product information.
+  return `You are a senior international trade and market expansion consultant with expertise in helping businesses expand into ${market}. Provide a detailed feasibility analysis for market entry.
 
-### Input Information:
+### 📦 Product Information:
 - **Product Name**: ${productData.productName}
 - **Product Category**: ${productData.category}
 - **Product Description**: ${productData.description}
 - **Target Market**: ${market}
-- **Price Range**: $${productData.costPrice} - $${productData.sellingPrice}
+- **Cost Price**: $${productData.costPrice} USD
+- **Target Selling Price**: $${productData.sellingPrice} USD
 - **Current Market**: ${productData.currentMarket}
 - **Production Capacity**: ${productData.productionCapacity}
 - **Existing Certifications**: ${productData.certifications || 'None'}
 - **Shelf Life**: ${productData.shelfLife || 'N/A'}
 - **Export Experience**: ${productData.experience}
 
-### Analysis Requirements:
-Please generate a comprehensive market entry analysis report following this structure:
+---
 
-#### 1. Legal & Regulatory Compliance Analysis (Weight: 30%)
-- Research and analyze import regulations for ${productData.category} in ${market}
-- Product certification requirements (e.g., CE, FDA, CCC, etc.)
-- Labeling and packaging regulations
-- Prohibited or restricted items clauses
-- **Compliance Score**: [0-100]
+### 📊 Analysis Requirements:
+
+Please analyze the **${market}** market across the following 5 dimensions. Provide a score (0-100) for each dimension:
+
+#### 1️⃣ Legal & Regulatory Compliance (Weight: 30%)
+Analyze specific regulations for **${productData.category}** products entering **${market}**:
+- Import regulations and customs requirements
+- Required product certifications (e.g., CE for EU, FDA for US, CCC for China)
+- Labeling and packaging requirements
+- Prohibited or restricted items
+- Timeline for compliance (estimated months)
 - **Risk Level**: Low/Medium/High
+- **Compliance Score**: 0-100
 
-#### 2. Competitive Market Analysis (Weight: 25%)
-- Identify major competitors for similar products in ${market} (at least 3-5)
-- Competitor price range comparison
+#### 2️⃣ Competitive Landscape (Weight: 25%)
+Identify and analyze the competitive environment in **${market}**:
+- Major competitors selling similar products (list at least 3-5 specific companies)
+- Competitor pricing ranges (with currency)
 - Market share distribution
 - Competition intensity assessment
-- **Competitiveness Score**: [0-100]
+- Market entry barriers
+- **Competitiveness Score**: 0-100
 
-#### 3. Market Demand & Potential (Weight: 20%)
-- Market size for this product category in ${market}
-- Growth trends and forecasts
-- Consumer preferences and purchasing behaviors
+#### 3️⃣ Market Demand & Potential (Weight: 20%)
+Evaluate market size and growth potential for **${productData.category}** in **${market}**:
+- Current market size (with specific figures and currency)
+- Growth trends and forecasts (with percentages and timeframes)
+- Consumer preferences and buying behaviors
 - Seasonal factors
-- **Market Potential Score**: [0-100]
+- Key distribution channels
+- **Market Demand Score**: 0-100
 
-#### 4. Pricing Strategy Recommendations (Weight: 15%)
-- Recommended pricing range based on competitor analysis
-- Tariff and logistics cost estimates
-- Profit margin analysis
-- **Price Competitiveness Score**: [0-100]
+#### 4️⃣ Pricing Strategy (Weight: 15%)
+Develop a competitive pricing strategy:
+- Recommended price range based on competitor analysis
+- Import duties and tariff estimates (with percentages)
+- Logistics and shipping cost estimates
+- Gross profit margin analysis
+- Break-even analysis
+- **Pricing Competitiveness Score**: 0-100
 
-#### 5. Cultural & Localization Adaptation (Weight: 10%)
-- Product localization requirements
-- Cultural taboos or sensitivities
-- Marketing strategy recommendations
-- **Adaptation Score**: [0-100]
+#### 5️⃣ Cultural & Localization Fit (Weight: 10%)
+Assess cultural adaptation requirements:
+- Product localization needs (language, packaging, sizing)
+- Cultural sensitivities or taboos
+- Marketing and positioning recommendations
+- Local partnership opportunities
+- **Adaptation Score**: 0-100
 
-### Output Format:
-Please respond with a valid JSON object following this exact structure:
+---
+
+### 🎯 Output Format Requirements:
+
+Return ONLY a valid JSON object (do NOT include markdown code block markers like \`\`\`json):
 
 {
   "market": "${market}",
@@ -75,71 +99,190 @@ Please respond with a valid JSON object following this exact structure:
   "legalCompliance": {
     "score": 75,
     "riskLevel": "Medium",
-    "regulations": ["regulation 1", "regulation 2"],
-    "certifications": ["cert 1", "cert 2"],
-    "labelingRequirements": ["requirement 1"],
-    "prohibitions": ["prohibition 1"]
+    "regulations": [
+      "EU Food Safety Regulation (EC) No 178/2002 requires all food products to be traceable",
+      "Organic certification requires EU Organic Regulation (EC) No 834/2007 compliance"
+    ],
+    "certifications": [
+      "CE marking required for consumer products",
+      "Organic certification from EU-recognized body"
+    ],
+    "labelingRequirements": [
+      "Multi-language labels (English + local language)",
+      "Nutritional information in standardized format",
+      "Origin country clearly marked"
+    ],
+    "prohibitions": [
+      "No products containing banned additives (see EU Regulation 1333/2008)"
+    ],
+    "complianceTimeline": "6-9 months for full certification"
   },
   "competitiveAnalysis": {
     "score": 82,
     "competitors": [
-      {"name": "Competitor A", "priceRange": "$10-$20", "marketShare": "25%"}
+      {
+        "name": "Twinings Tea (Unilever)",
+        "priceRange": "$4.99-$8.99 per 20-bag box",
+        "marketShare": "23%",
+        "strengths": "Strong brand recognition, wide distribution"
+      },
+      {
+        "name": "Harney & Sons",
+        "priceRange": "$7.99-$12.99 per 20-bag box",
+        "marketShare": "8%",
+        "strengths": "Premium positioning, specialty flavors"
+      },
+      {
+        "name": "Traditional Medicinals",
+        "priceRange": "$5.99-$9.99 per 16-bag box",
+        "marketShare": "12%",
+        "strengths": "Organic focus, health-oriented"
+      }
     ],
-    "competitionIntensity": "Medium",
-    "marketShareDistribution": "Top 3 players control 60% of market"
+    "competitionIntensity": "High",
+    "marketShareDistribution": "Top 5 brands control 65% of market; strong brand loyalty exists",
+    "entryBarriers": "High - requires significant marketing investment and retail partnerships"
   },
   "marketDemand": {
     "score": 90,
-    "marketSize": "$500M annually",
-    "growthTrend": "Growing at 8% YoY",
-    "consumerPreferences": ["preference 1", "preference 2"],
-    "seasonalFactors": ["factor 1"]
+    "marketSize": "$2.3 billion USD annually (2024)",
+    "growthTrend": "Growing at 7.2% CAGR (2024-2029)",
+    "consumerPreferences": [
+      "Increasing demand for organic and sustainably-sourced products",
+      "Preference for premium, specialty teas over commodity products",
+      "Health and wellness benefits are key purchase drivers"
+    ],
+    "seasonalFactors": [
+      "Peak sales in Q4 (holiday season)",
+      "20% sales increase during cold weather months"
+    ],
+    "distributionChannels": [
+      "Supermarkets (45%)",
+      "Specialty stores (25%)",
+      "Online retail (20%)",
+      "Food service (10%)"
+    ]
   },
   "pricingStrategy": {
     "score": 78,
     "recommendedPriceRange": {
-      "min": 15,
-      "max": 25,
-      "currency": "USD"
+      "min": ${Math.round(productData.sellingPrice * 0.85)},
+      "max": ${Math.round(productData.sellingPrice * 1.15)},
+      "currency": "USD",
+      "rationale": "Positioned between mass-market and premium tiers"
     },
-    "tariffEstimate": "10-15% import duty",
-    "logisticsCost": "$2-3 per unit",
-    "profitMargin": "30-40%"
+    "tariffEstimate": "Import duty: 6.4% for tea products under HS code 0902",
+    "logisticsCost": "$1.20-$1.80 per unit (including shipping, warehousing, distribution)",
+    "profitMargin": "Estimated 35-42% gross margin after all costs",
+    "breakEvenAnalysis": "Need to sell approximately 15,000 units in first year to break even"
   },
   "culturalAdaptation": {
     "score": 85,
-    "localizationRequirements": ["requirement 1"],
-    "culturalConsiderations": ["consideration 1"],
-    "marketingRecommendations": ["recommendation 1"]
+    "localizationRequirements": [
+      "Packaging should emphasize organic/natural aspects (key value in ${market})",
+      "Consider smaller package sizes (European preference)",
+      "Multi-language packaging required for EU markets"
+    ],
+    "culturalConsiderations": [
+      "Strong preference for ethically-sourced products",
+      "Sustainability credentials are important purchase factors",
+      "Health claims must comply with EU Nutrition and Health Claims Regulation"
+    ],
+    "marketingRecommendations": [
+      "Partner with health food stores and wellness influencers",
+      "Emphasize origin story and farming practices",
+      "Leverage digital marketing and e-commerce platforms",
+      "Consider participating in organic/natural product trade shows"
+    ]
   },
   "keyFindings": [
-    "Finding 1",
-    "Finding 2",
-    "Finding 3"
+    "${market} shows strong demand for organic ${productData.category} with 7.2% annual growth",
+    "Main competitors price ${productData.category} in the $5-$13 range, leaving room for competitive positioning",
+    "EU organic certification required - estimated 6-9 months to obtain",
+    "Strong e-commerce opportunity with 20% of market shifting online",
+    "Import duties of 6.4% are manageable within target margins"
   ],
   "actionItems": [
-    "Action 1",
-    "Action 2",
-    "Action 3"
+    "PRIORITY: Begin EU organic certification process immediately (6-9 month timeline)",
+    "Conduct packaging redesign for EU labeling requirements",
+    "Establish relationships with organic food distributors in ${market}",
+    "Recommended retail price: $${Math.round(productData.sellingPrice * 0.9)}-$${Math.round(productData.sellingPrice * 1.1)} to compete effectively",
+    "Budget $50,000-$75,000 for initial market entry costs",
+    "Consider attending BioFach trade show to meet buyers"
   ],
   "riskAlerts": [
-    "Risk 1",
-    "Risk 2"
+    "HIGH PRIORITY: Organic certification required - budget $5,000-$10,000 and allow 6-9 months",
+    "Competition is intense; differentiation strategy is critical",
+    "Retail distribution requires minimum order quantities and long payment terms",
+    "Brexit may affect UK market access differently than EU markets"
+  ],
+  "opportunities": [
+    "Growing consumer interest in sustainably-sourced products aligns with product positioning",
+    "E-commerce channel growing 15% annually - lower barrier to entry",
+    "Premium pricing acceptable if quality and story are communicated effectively"
   ],
   "sources": [
-    "Source 1",
-    "Source 2"
+    "Euromonitor International - Tea Market in ${market} 2024",
+    "EU Food Safety Authority (EFSA) regulations database",
+    "WTO Tariff Database - HS Code 0902",
+    "${market} Customs Authority official website",
+    "Statista Market Research - Organic Food Industry"
   ],
   "lastUpdated": "${new Date().toISOString()}"
 }
 
-### Important Notes:
-1. All data and information must cite sources
-2. Price information must include currency and date updated
-3. Regulatory information must reference official sources
-4. If certain information is unavailable, clearly state this and provide alternative suggestions
-5. Ensure the JSON is valid and properly formatted
-6. Use "strongly-recommended" (90-100), "recommended" (70-89), "consider-carefully" (50-69), or "not-recommended" (below 50) for the recommendation field`;
+---
+
+### ⚠️ Critical Requirements:
+
+1. **Data Quality**: Base all analysis on realistic market conditions and publicly available information
+2. **Specificity**: Include specific company names, exact price ranges with currency, and concrete figures
+3. **Official Sources**: Reference official regulations by their regulation numbers (e.g., "EU Regulation 178/2002")
+4. **Transparency**: If certain information is unavailable, clearly state this and provide alternative recommendations
+5. **JSON Validity**: Ensure the JSON is perfectly formatted and can be parsed directly
+6. **Recommendation Mapping**:
+   - "strongly-recommended" = 90-100 points
+   - "recommended" = 70-89 points
+   - "consider-carefully" = 50-69 points
+   - "not-recommended" = below 50 points
+7. **Actionable Insights**: All recommendations must be specific and actionable, not generic advice
+8. **Currency**: Always specify currency for all monetary values
+9. **Timeframes**: Include estimated timeframes for certifications and market entry steps
+10. **Real Companies**: When listing competitors, use real company names when possible
+
+---
+
+### 🎯 Scoring Guidelines:
+
+**Legal Compliance (0-100):**
+- 90-100: Minimal barriers, simple registration
+- 70-89: Moderate requirements, standard certifications needed
+- 50-69: Significant regulatory hurdles, time-intensive
+- 0-49: Major barriers, prohibited/restricted products
+
+**Competitive Analysis (0-100):**
+- 90-100: Low competition, high differentiation opportunity
+- 70-89: Moderate competition, clear positioning strategy exists
+- 50-69: High competition, differentiation challenging
+- 0-49: Saturated market, no clear competitive advantage
+
+**Market Demand (0-100):**
+- 90-100: Large market, strong growth, high demand
+- 70-89: Good market size, stable growth
+- 50-69: Limited market, slow growth
+- 0-49: Small/declining market, low demand
+
+**Pricing Strategy (0-100):**
+- 90-100: Excellent margins, competitive pricing advantage
+- 70-89: Good margins, competitive pricing
+- 50-69: Thin margins, pricing pressure
+- 0-49: Unprofitable, cannot compete on price
+
+**Cultural Adaptation (0-100):**
+- 90-100: Minimal adaptation needed, strong cultural fit
+- 70-89: Moderate localization, manageable
+- 50-69: Significant adaptation required
+- 0-49: Major cultural barriers, extensive changes needed`;
 }
 
 /**
