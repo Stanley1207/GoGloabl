@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { analyzeProduct } from '../services/deepseek.js';
+import { analyzeProduct } from '../services/gemini.js';
 import type { AnalysisRequest, AnalysisResponse, ProductData } from '../types.js';
 
 const router = express.Router();
@@ -33,7 +33,8 @@ router.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'GOGLOBAL Market Analysis API'
+    service: 'GOGLOBAL Market Analysis API',
+    aiProvider: 'Google Gemini'
   });
 });
 
@@ -130,6 +131,7 @@ if (process.env.NODE_ENV === 'development') {
     res.json({
       success: true,
       message: 'Test endpoint working',
+      aiProvider: 'Google Gemini',
       receivedData: req.body,
       timestamp: new Date().toISOString()
     });

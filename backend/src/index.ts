@@ -12,13 +12,14 @@ const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '../.env') });
 
 // Validate required environment variables
-if (!process.env.DEEPSEEK_API_KEY) {
-  console.error('❌ Error: DEEPSEEK_API_KEY is not set in environment variables');
-  console.error('Please create a .env file with your DeepSeek API key');
+if (!process.env.GEMINI_API_KEY) {
+  console.error('❌ Error: GEMINI_API_KEY is not set in environment variables');
+  console.error('Please create a .env file with your Gemini API key');
   console.error(`Looking for .env at: ${join(__dirname, '../.env')}`);
+  console.error('\n📝 Get your API key at: https://makersuite.google.com/app/apikey');
   process.exit(1);
-}else{
-    console.log('🚀 FOUND deepseek api');
+} else {
+  console.log('🚀 FOUND Gemini API key');
 }
 
 const app = express();
@@ -46,6 +47,7 @@ app.get('/', (req, res) => {
     service: 'GOGLOBAL Market Analysis API',
     version: '1.0.0',
     status: 'running',
+    aiProvider: 'Google Gemini',
     endpoints: {
       health: '/api/health',
       analyze: 'POST /api/analyze'
@@ -68,9 +70,10 @@ app.listen(PORT, () => {
   console.log(`✓ Server running on: http://localhost:${PORT}`);
   console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`✓ Frontend URL: ${FRONTEND_URL}`);
-  console.log(`✓ API Key configured: ${process.env.DEEPSEEK_API_KEY ? '✓' : '✗'}`);
-  if (process.env.DEEPSEEK_API_KEY) {
-    console.log(`✓ API Key preview: ${process.env.DEEPSEEK_API_KEY.substring(0, 8)}...`);
+  console.log(`✓ AI Provider: Google Gemini`);
+  console.log(`✓ API Key configured: ${process.env.GEMINI_API_KEY ? '✓' : '✗'}`);
+  if (process.env.GEMINI_API_KEY) {
+    console.log(`✓ API Key preview: ${process.env.GEMINI_API_KEY.substring(0, 8)}...`);
   }
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');

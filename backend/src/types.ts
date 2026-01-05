@@ -101,7 +101,62 @@ export interface AnalysisResponse {
   timestamp: string;
 }
 
-// DeepSeek API types
+// ========================================
+// Gemini API types
+// ========================================
+export interface GeminiPart {
+  text: string;
+}
+
+export interface GeminiContent {
+  parts: GeminiPart[];
+  role?: string;
+}
+
+export interface GeminiGenerationConfig {
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+  maxOutputTokens?: number;
+  responseMimeType?: string;
+}
+
+export interface GeminiRequest {
+  contents: GeminiContent[];
+  generationConfig?: GeminiGenerationConfig;
+}
+
+export interface GeminiResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
+        text?: string;
+      }>;
+      role?: string;
+    };
+    finishReason?: string;
+    index?: number;
+    safetyRatings?: Array<{
+      category: string;
+      probability: string;
+    }>;
+  }>;
+  promptFeedback?: {
+    safetyRatings?: Array<{
+      category: string;
+      probability: string;
+    }>;
+  };
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
+}
+
+// ========================================
+// DeepSeek API types (legacy - kept for reference)
+// ========================================
 export interface DeepSeekMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
